@@ -27,8 +27,6 @@ That pushed the design away from “chat over data” and toward something stric
 
 ![](.MEDIUM_images/dc5cce02.png)
 
-One diagram showing PostgreSQL, Frictionless datapackage resources, FastAPI, FastMCP, Pydantic AI agent, OKF markdown instructions, and agent memory PostgreSQL.
-
 ---
 
 ## Why Redemption Optimization Needs More Than a Chatbot
@@ -483,8 +481,6 @@ The run log showed MCP session negotiation at the start:
 That log line helped later. When the agent misbehaved, I could separate MCP connectivity from model behavior.
 
 ![](.MEDIUM_images/2dececac.png)
-
-Show FastAPI endpoints and FastMCP mounted at `/mcp/`, both backed by the same resource service.
 
 ---
 
