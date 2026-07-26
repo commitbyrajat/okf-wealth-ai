@@ -692,8 +692,6 @@ That second table, `agent_memory_operations`, became important. It told me the w
 
 ![](.MEDIUM_images/bb6c56dc.png)
 
-Show `INTERACTIONS.md`, `MEMORY.md`, `agent_memory`, and `agent_memory_operations`.
-
 ---
 
 ## Redemption Optimizer Flow: From User Question to Recommendation
@@ -978,10 +976,7 @@ The important organizational move was separating `okf-wealth-base` from the agen
 
 The final redemption optimizer answer was not magic. It was the result of a visible chain:
 
-```text
-question -> index.md -> holding_calculation.md -> redemption_optimizer.md
--> MCP data -> structured output -> validation -> memory record
-```
+![](.MEDIUM_images/9f035f2d.png)
 
 That chain is what made the answer worth trusting.
 
