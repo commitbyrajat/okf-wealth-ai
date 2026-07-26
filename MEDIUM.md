@@ -66,11 +66,9 @@ A customer owns units across one or more funds. Some units are old enough to red
 
 For the customer in the implementation run, the data looked like this:
 
-| Fund | Units | Transaction dates | Exit-load rule | Status from run |
-| --- | ---: | --- | --- | --- |
-| `504` Balanced Advantage Fund | `125` | `2025-11-15` | `180` days, `1.00` rate | no exit load |
-| `502` Short Duration Debt Fund | `50` | `2026-02-01` | `365` days, `0.50` rate | exit load applies |
-| `502` Short Duration Debt Fund | `30` | `2026-04-05` | `365` days, `0.50` rate | exit load applies |
+- Fund `504`, Balanced Advantage Fund: `125` units bought on `2025-11-15`. The exit-load rule is `180` days at `1.00` rate. In the captured run, no exit load applied.
+- Fund `502`, Short Duration Debt Fund: `50` units bought on `2026-02-01`. The exit-load rule is `365` days at `0.50` rate. In the captured run, exit load applied.
+- Fund `502`, Short Duration Debt Fund: `30` units bought on `2026-04-05`. The same `365` day, `0.50` rate exit-load rule applied.
 
 The agent’s recommendation was direct:
 
@@ -86,13 +84,15 @@ That is the kind of answer an advisor can work with.
 
 The design was based on four public sources and one implementation repository.
 
-| Source | How it shaped the implementation |
-| --- | --- |
-| Open Knowledge Foundation — https://okfn.org/en/ | The broader idea that useful knowledge should be accessible, shareable, and reusable. |
-| Frictionless Data Package specification — https://specs.frictionlessdata.io/#what-s-a-data-package | The data contract model: package, resources, schema, and machine-readable metadata. |
-| Google Open Knowledge Format spec — https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md | The format inspiration for treating each business rule as a Concept document: one markdown file with frontmatter and a structured body. |
-| Google Cloud OKF article — https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing | The framing that knowledge sharing needs a format, not just documents scattered in repositories. |
-| Wealth OKF base repository — https://github.com/commitbyrajat/okf-wealth-base | The actual knowledge base and datapackage contract consumed by the agent. |
+Open Knowledge Foundation, at https://okfn.org/en/, shaped the broader idea that useful knowledge should be accessible, shareable, and reusable.
+
+The Frictionless Data Package specification, at https://specs.frictionlessdata.io/#what-s-a-data-package, shaped the data contract model: package, resources, schema, and machine-readable metadata.
+
+The Google Open Knowledge Format spec, at https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md, shaped the idea of treating each business rule as a Concept document: one markdown file with frontmatter and a structured body.
+
+The Google Cloud OKF article, at https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing, shaped the framing that knowledge sharing needs a format, not just documents scattered in repositories.
+
+The wealth OKF base repository, at https://github.com/commitbyrajat/okf-wealth-base, became the actual knowledge base and datapackage contract consumed by the agent.
 
 Those sources influenced one important decision.
 
@@ -100,12 +100,13 @@ The business rules were not embedded only in code. They lived as markdown knowle
 
 The implementation repository has two important parts:
 
-| Repository path | What it contains |
-| --- | --- |
-| `knowledge/index.md` | The OKF directory listing. It routes scenarios to the right concept documents. |
-| `knowledge/holding_calculation.md` | An OKF Concept document with `type: "logic_doc"`. It defines the holding calculation rule: buys add units, sells subtract units, and non-positive totals are closed holdings. |
-| `knowledge/redemption_optimizer.md` | An OKF Concept document with `type: "strategy_doc"`. It defines the redemption policy: prefer FIFO, avoid exit-load lots where the holding period is still inside the exit-load window, and handle partial redemption differently from full redemption. |
-| `datapackage.json` | The Frictionless contract for SQL-backed resources such as `customers`, `fund_master`, `transactions`, `transactions_by_customer`, `current_holdings`, `redemption_lots`, `open_holdings`, and `exit_load_free_redemption_lots`. |
+`knowledge/index.md` is the OKF directory listing. It routes scenarios to the right concept documents.
+
+`knowledge/holding_calculation.md` is an OKF Concept document with `type: "logic_doc"`. It defines the holding calculation rule: buys add units, sells subtract units, and non-positive totals are closed holdings.
+
+`knowledge/redemption_optimizer.md` is an OKF Concept document with `type: "strategy_doc"`. It defines the redemption policy: prefer FIFO, avoid exit-load lots where the holding period is still inside the exit-load window, and handle partial redemption differently from full redemption.
+
+`datapackage.json` is the Frictionless contract for SQL-backed resources such as `customers`, `fund_master`, `transactions`, `transactions_by_customer`, `current_holdings`, `redemption_lots`, `open_holdings`, and `exit_load_free_redemption_lots`.
 
 The OKF spec makes a useful distinction here. A Concept is a single unit of knowledge represented as one markdown document. `index.md` is reserved for directory listing and progressive disclosure. The other markdown files are concept documents. That is why `holding_calculation.md` and `redemption_optimizer.md` are not just supporting notes. They are the business-rule units the agent must consult.
 
@@ -165,10 +166,9 @@ The live `knowledge/index.md` in `okf-wealth-base` is explicit about that contra
 
 That maps cleanly to the OKF spec. The bundle is the repository. The index is the directory listing. The concept documents are the markdown files that carry the actual knowledge:
 
-| Concept document | Frontmatter type | Business meaning |
-| --- | --- | --- |
-| `holding_calculation.md` | `logic_doc` | How to derive current holdings from BUY and SELL transactions. |
-| `redemption_optimizer.md` | `strategy_doc` | How to choose redemption lots using FIFO, exit-load checks, and partial-redemption rules. |
+`holding_calculation.md` has frontmatter type `logic_doc`. Its business meaning is holding derivation from BUY and SELL transactions.
+
+`redemption_optimizer.md` has frontmatter type `strategy_doc`. Its business meaning is redemption lot selection using FIFO, exit-load checks, and partial-redemption rules.
 
 The benefit is not only neat organization. It changes how the agent behaves.
 
@@ -210,11 +210,9 @@ The domain was intentionally small:
 
 The request log shows the important fields returned for customer `2`:
 
-| Transaction | Fund | Units | Date | Exit-load period | Exit-load rate | NAV |
-| --- | --- | ---: | --- | ---: | ---: | ---: |
-| `107` | `504` Balanced Advantage Fund | `125` | `2025-11-15` | `180` | `1.00` | `28.4000` |
-| `103` | `502` Short Duration Debt Fund | `50` | `2026-02-01` | `365` | `0.50` | `12.2000` |
-| `106` | `502` Short Duration Debt Fund | `30` | `2026-04-05` | `365` | `0.50` | `12.2000` |
+- Transaction `107`: fund `504`, Balanced Advantage Fund, `125` units, transaction date `2025-11-15`, exit-load period `180`, exit-load rate `1.00`, NAV `28.4000`.
+- Transaction `103`: fund `502`, Short Duration Debt Fund, `50` units, transaction date `2026-02-01`, exit-load period `365`, exit-load rate `0.50`, NAV `12.2000`.
+- Transaction `106`: fund `502`, Short Duration Debt Fund, `30` units, transaction date `2026-04-05`, exit-load period `365`, exit-load rate `0.50`, NAV `12.2000`.
 
 That is enough to compute holdings and make a redemption recommendation.
 
@@ -222,11 +220,11 @@ For current holdings, the rule was simple: sum buys and subtract sells. In this 
 
 The agent derived:
 
-| Fund | Units | NAV | Value |
-| --- | ---: | ---: | ---: |
-| `502` Short Duration Debt Fund | `80` | `12.20` | `976.00` |
-| `504` Balanced Advantage Fund | `125` | `28.40` | `3550.00` |
-| Total | | | `4526.00` |
+Fund `502`, Short Duration Debt Fund, had `80` units at NAV `12.20`, for value `976.00`.
+
+Fund `504`, Balanced Advantage Fund, had `125` units at NAV `28.40`, for value `3550.00`.
+
+The total value was `4526.00`.
 
 ![](.MEDIUM_images/25e653c0.png)
 
@@ -331,12 +329,13 @@ The public datapackage contract lists the base resources and the use-case resour
 
 The result was a clearer boundary:
 
-| Layer | Responsibility |
-| --- | --- |
-| PostgreSQL | source data and basic relational storage |
-| Frictionless datapackage | resource contract |
-| `okf_mcp` | validation, extraction, transformation, API/MCP exposure |
-| Agent | orchestration and structured response |
+PostgreSQL handled source data and basic relational storage.
+
+The Frictionless datapackage handled the resource contract.
+
+`okf_mcp` handled validation, extraction, transformation, API exposure, and MCP exposure.
+
+The agent handled orchestration and structured response.
 
 That kept business behavior visible without turning the database into the only place rules could live.
 
@@ -518,14 +517,17 @@ The agent had four main responsibilities:
 
 The captured redemption run shows that sequence:
 
-| Time | Event |
-| --- | --- |
-| `01:18:54` | agent run started, memory pool opened, MCP session negotiated |
-| `01:19:04` | index document read |
-| `01:19:10` | holding calculation document read |
-| `01:19:20` | redemption optimizer document read |
-| `01:19:26` | MCP data call |
-| `01:20:08` | output validation and interaction memory write |
+At `01:18:54`, the agent run started, the memory pool opened, and the MCP session was negotiated.
+
+At `01:19:04`, the index document was read.
+
+At `01:19:10`, the holding calculation document was read.
+
+At `01:19:20`, the redemption optimizer document was read.
+
+At `01:19:26`, the MCP data call happened.
+
+At `01:20:08`, output validation ran and the interaction memory record was written.
 
 The whole captured redemption run took about 74 seconds from `01:18:54` to `01:20:08`.
 
@@ -700,11 +702,11 @@ uv run okf-agent "Show transactions for customer 2 and list the holdings and opt
 
 The final recommendation came from three inputs:
 
-| Input | Source |
-| --- | --- |
-| Customer transactions | `transactions_by_customer` via MCP |
-| Holding rules | `holding_calculation.md` |
-| Redemption rules | `redemption_optimizer.md` |
+Customer transactions came from `transactions_by_customer` through MCP.
+
+Holding rules came from `holding_calculation.md`.
+
+Redemption rules came from `redemption_optimizer.md`.
 
 The answer followed a clean path:
 
@@ -783,10 +785,9 @@ The holding-only run completed in about 62 seconds, from `01:06:03` to `01:07:05
 
 The full redemption run completed in about 74 seconds, from `01:18:54` to `01:20:08`.
 
-| Run | Instruction count | Scenario | Evidence |
-| --- | ---: | --- | --- |
-| Customer transactions | `2` | `customer_transactions` | index + holding calculation |
-| Redemption optimizer | `3` | `redemption_optimization` | index + holding calculation + redemption optimizer |
+The customer transactions run used instruction count `2`, scenario `customer_transactions`, and evidence from the index plus holding calculation.
+
+The redemption optimizer run used instruction count `3`, scenario `redemption_optimization`, and evidence from the index, holding calculation, and redemption optimizer.
 
 The memory table also captured the result summary:
 
@@ -815,13 +816,15 @@ This is the kind of logging I want in agent systems. Not verbose for the sake of
 
 The operational risks fell into a few buckets.
 
-| Failure mode | What it looked like | Fix or guardrail |
-| --- | --- | --- |
-| Provider delay | OpenAI response calls dominate run time | model request timeout and full run timeout |
-| Missing instruction read | agent stops after index | output validator requires scenario documents |
-| Empty memory table | no rows after normal assumption about memory | app-level `INTERACTIONS.md` write before model call |
-| Empty operation table | content write without receipt | writes pass `MemoryOperation` |
-| Large final answer | structured answer needs more output room | output-token setting moved to environment configuration |
+Provider delay showed up as OpenAI response calls dominating run time. The guardrail was a model request timeout plus a full run timeout.
+
+A missing instruction read showed up when the agent stopped after the index. The guardrail was an output validator that requires scenario documents.
+
+An empty memory table showed up after the wrong assumption that normal agent execution would always create memory rows. The fix was an app-level `INTERACTIONS.md` write before the model call.
+
+An empty operation table meant content had been written without an operation receipt. The fix was to pass writes through `MemoryOperation`.
+
+A large final answer needed more output room. The output-token setting moved into environment configuration.
 
 I had to correct my own assumption about memory. The harness was configured, but that did not mean every run automatically created a useful row. Once the app wrote an interaction record at run start, memory verification became deterministic.
 
@@ -885,16 +888,21 @@ OK
 
 The coverage report for `src/okf_agent` was:
 
-| File | Statements | Missing | Branches | Partial branches | Coverage |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `src/okf_agent/__init__.py` | 4 | 0 | 0 | 0 | 100% |
-| `src/okf_agent/agent.py` | 160 | 60 | 24 | 6 | 59% |
-| `src/okf_agent/cli.py` | 35 | 35 | 8 | 0 | 0% |
-| `src/okf_agent/config.py` | 25 | 0 | 0 | 0 | 100% |
-| `src/okf_agent/logging_config.py` | 5 | 2 | 0 | 0 | 60% |
-| `src/okf_agent/models.py` | 47 | 1 | 4 | 1 | 96% |
-| `src/okf_agent/test_runner.py` | 6 | 6 | 0 | 0 | 0% |
-| Total | 282 | 104 | 36 | 7 | 59% |
+`src/okf_agent/__init__.py` had 4 statements, 0 missing statements, 0 branches, 0 partial branches, and 100% coverage.
+
+`src/okf_agent/agent.py` had 160 statements, 60 missing statements, 24 branches, 6 partial branches, and 59% coverage.
+
+`src/okf_agent/cli.py` had 35 statements, 35 missing statements, 8 branches, 0 partial branches, and 0% coverage.
+
+`src/okf_agent/config.py` had 25 statements, 0 missing statements, 0 branches, 0 partial branches, and 100% coverage.
+
+`src/okf_agent/logging_config.py` had 5 statements, 2 missing statements, 0 branches, 0 partial branches, and 60% coverage.
+
+`src/okf_agent/models.py` had 47 statements, 1 missing statement, 4 branches, 1 partial branch, and 96% coverage.
+
+`src/okf_agent/test_runner.py` had 6 statements, 6 missing statements, 0 branches, 0 partial branches, and 0% coverage.
+
+Overall, the agent package had 282 statements, 104 missing statements, 36 branches, 7 partial branches, and 59% coverage.
 
 That number is honest. The deterministic parts are well covered: settings, output models, instruction URL normalization, memory note extraction, app-level memory writes, and operation receipts. The weak spots are also clear. The CLI has no tests yet, and the live orchestration paths in `agent.py` still need integration tests around `/instructions`, MCP calls, timeout handling, and provider-error behavior.
 
@@ -908,15 +916,19 @@ That gave the agent freedom to phrase the answer while keeping the system behavi
 
 The best part of the design is the separation of contracts.
 
-| Concern | Contract |
-| --- | --- |
-| Data shape | Frictionless datapackage |
-| Business rules | OKF-style markdown |
-| Tool access | FastMCP |
-| HTTP debugging | FastAPI |
-| Agent output | Pydantic model |
-| Memory persistence | Pydantic AI Harness + PostgreSQL |
-| Domain ownership | `okf-wealth-base` pull requests reviewed by wealth, risk, operations, compliance, and engineering |
+Data shape is governed by the Frictionless datapackage.
+
+Business rules are governed by OKF-style markdown.
+
+Tool access is governed by FastMCP.
+
+HTTP debugging is handled through FastAPI.
+
+Agent output is governed by the Pydantic model.
+
+Memory persistence is handled by Pydantic AI Harness and PostgreSQL.
+
+Domain ownership is handled through `okf-wealth-base` pull requests reviewed by wealth, risk, operations, compliance, and engineering.
 
 The agent is not trusted blindly. It has to read instructions. It has to use tools. It has to return structured data. It has to pass validation.
 
