@@ -1,0 +1,24 @@
+[project]
+name = "okf-exec"
+version = "0.1.0"
+description = "PostgreSQL-backed Frictionless Data execution examples for the OKF wealth management knowledge base."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "black>=26.5.1",
+    "fastapi>=0.116.0",
+    "fastmcp>=2.13.0",
+    "frictionless[github,postgresql]>=5.18.1",
+    "isort>=8.0.1",
+    "uvicorn>=0.35.0",
+]
+
+[project.scripts]
+okf-example = "okf_exec.example:main"
+okf-exec = "okf_exec.example:main"
+okf-api = "okf_exec.api:main"
+okf-test = "okf_exec.test_runner:main"
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.9.0"]
+build-backend = "uv_build"

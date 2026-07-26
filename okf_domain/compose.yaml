@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: okf-postgres
+    environment:
+      POSTGRES_DB: okf_wealth
+      POSTGRES_USER: okf
+      POSTGRES_PASSWORD: okf_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - ./data:/seed-data:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U okf -d okf_wealth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  agent-memory-postgres:
+    image: postgres:16-alpine
+    container_name: okf-agent-memory-postgres
+    environment:
+      POSTGRES_DB: okf_agent_memory
+      POSTGRES_USER: okf_agent
+      POSTGRES_PASSWORD: okf_agent_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - agent_memory_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U okf_agent -d okf_agent_memory"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  agent_memory_postgres_data:

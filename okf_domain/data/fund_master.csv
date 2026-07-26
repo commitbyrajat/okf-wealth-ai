@@ -1,0 +1,6 @@
+fund_id,fund_name,amc_name,category,exit_load_period_days,exit_load_rate,current_nav,nav_date
+501,Bluechip Equity Fund,Northstar AMC,Large Cap Equity,90,1.00,45.50,2026-07-25
+502,Short Duration Debt Fund,Northstar AMC,Short Duration Debt,365,0.50,12.20,2026-07-25
+503,Tax Saver Equity Fund,Apex Mutual Fund,ELSS,0,0.00,31.75,2026-07-25
+504,Balanced Advantage Fund,Apex Mutual Fund,Hybrid,180,1.00,28.40,2026-07-25
+505,Liquid Treasury Fund,Harbor Mutual Fund,Liquid,7,0.10,10.05,2026-07-25

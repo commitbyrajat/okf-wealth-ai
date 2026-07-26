@@ -1,0 +1,35 @@
+[project]
+name = "okf-agent"
+version = "0.1.0"
+description = "Pydantic AI agent for the OKF wealth management knowledge base."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncpg>=0.30.0",
+    "httpx>=0.28.0",
+    "pydantic-ai-harness>=0.9.0",
+    "pydantic-ai-slim[mcp,openai]>=2.14.1",
+    "pydantic-settings>=2.14.0",
+    "python-dotenv>=1.2.0",
+]
+
+[project.scripts]
+okf-agent = "okf_agent.cli:main"
+okf-agent-test = "okf_agent.test_runner:main"
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "coverage[toml]>=7.6.0",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["okf_agent"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
