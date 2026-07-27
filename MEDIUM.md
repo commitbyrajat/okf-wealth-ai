@@ -2,6 +2,8 @@
 
 ## A field note from turning markdown knowledge, datapackages, MCP tools, and agent memory into one working flow
 
+Read for free: [FRIEND_LINK_PLACEHOLDER]
+
 The first version of this system looked simple on paper.
 
 Ask an agent:
@@ -532,6 +534,10 @@ At `01:20:08`, output validation ran and the interaction memory record was writt
 The whole captured redemption run took about 74 seconds from `01:18:54` to `01:20:08`.
 
 That is not a performance benchmark. It is just the observed timing from the run log. The important part is the shape: tool work, rule reads, data read, validation, cleanup.
+
+![](.MEDIUM_images/0d23792a.png)
+
+Paste the generated sequence diagram here, showing `okf_agent`, `okf_mcp`, `okf_domain`, `okf_base`, and agent memory across one redemption optimizer run.
 
 ```python
 def build_agent(

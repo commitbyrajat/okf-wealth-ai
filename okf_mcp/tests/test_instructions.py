@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from okf_exec.instructions import (
     DEFAULT_INSTRUCTIONS_URL,
@@ -91,6 +93,24 @@ class InstructionsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             reader.read("file:///tmp/index.md")
+
+    def test_reader_falls_back_to_local_knowledge_for_github_urls(self) -> None:
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "index.md").write_text("# Local Index\n", encoding="utf-8")
+
+            reader = InstructionReader(
+                fetcher=lambda _: (_ for _ in ()).throw(RuntimeError("offline")),
+                local_knowledge_root=root,
+            )
+            result = reader.read(DEFAULT_INSTRUCTIONS_URL)
+
+        self.assertEqual(result["content"], "# Local Index\n")
+        self.assertEqual(
+            result["resolved_url"],
+            "https://raw.githubusercontent.com/commitbyrajat/"
+            "okf-wealth-base/main/knowledge/index.md",
+        )
 
 
 if __name__ == "__main__":

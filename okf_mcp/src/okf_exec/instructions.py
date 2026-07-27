@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Callable
+from pathlib import Path
 from urllib.parse import unquote, urljoin, urlparse
 
 from frictionless.resources import TextResource
@@ -17,8 +18,14 @@ MARKDOWN_LINK_PATTERN = re.compile(r"(?<!!)\[([^\]]+)\]\(([^)\s]+)(?:\s+\"[^\"]*
 
 
 class InstructionReader:
-    def __init__(self, *, fetcher: Callable[[str], str] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        fetcher: Callable[[str], str] | None = None,
+        local_knowledge_root: Path | None = None,
+    ) -> None:
         self._fetcher = fetcher or self._read_with_frictionless
+        self._local_knowledge_root = local_knowledge_root or find_local_knowledge_root()
 
     def read(
         self,
@@ -98,12 +105,26 @@ class InstructionReader:
         except ValueError:
             raise
         except Exception as exception:
+            fallback = self._read_local_fallback(url)
+            if fallback is not None:
+                logger.info(
+                    "using local instruction fallback url=%s root=%s",
+                    url,
+                    self._local_knowledge_root,
+                )
+                return fallback
             raise RuntimeError(
                 f'could not read markdown instructions from "{url}": {exception}'
             ) from exception
 
     def _read_with_frictionless(self, url: str) -> str:
         return TextResource(path=url).read_text()
+
+    def _read_local_fallback(self, url: str) -> str | None:
+        local_path = resolve_local_knowledge_path(url, self._local_knowledge_root)
+        if local_path is None:
+            return None
+        return local_path.read_text(encoding="utf-8")
 
 
 def normalize_markdown_url(url: str) -> str:
@@ -189,3 +210,41 @@ def github_raw_root(url: str) -> str | None:
 
     owner, repository, branch = segments[:3]
     return f"{parsed.scheme}://{parsed.netloc}/{owner}/{repository}/{branch}"
+
+
+def find_local_knowledge_root() -> Path | None:
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "okf_base" / "knowledge"
+        if candidate.is_dir():
+            return candidate
+    return None
+
+
+def resolve_local_knowledge_path(url: str, root: Path | None) -> Path | None:
+    if root is None:
+        return None
+
+    parsed = urlparse(normalize_markdown_url(url))
+    if parsed.netloc != "raw.githubusercontent.com":
+        return None
+
+    segments = [unquote(segment) for segment in parsed.path.split("/") if segment]
+    if len(segments) < 5:
+        return None
+
+    owner, repository, _branch, directory, *path_parts = segments
+    if (
+        owner != "commitbyrajat"
+        or repository != "okf-wealth-base"
+        or directory != "knowledge"
+        or not path_parts
+    ):
+        return None
+
+    candidate = (root / Path(*path_parts)).resolve()
+    root_resolved = root.resolve()
+    if root_resolved not in candidate.parents and candidate != root_resolved:
+        return None
+    if not candidate.is_file():
+        return None
+    return candidate
